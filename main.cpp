@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-    ifstream inFile("input.txt");
+    ifstream inFile("input3.txt");
 
     int no_problems, no_doctors;
     string name, speciality;
@@ -45,6 +45,8 @@ int main()
 			{
                 cout << problem.first << ' ' << "Acceptat" << '\n';
                 ok = true;
+				break;
+
 			}
 		}
 		if (!ok)
