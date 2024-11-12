@@ -7,12 +7,12 @@ using namespace std;
 
 int main()
 {
-    ifstream inFile("input3.txt");
+    ifstream inFile("input2.txt");
 
     int no_problems, no_doctors;
     string name, speciality;
-	vector<pair<string, string>> problems;
 	vector<pair<string, string>> doctors;
+	vector<pair<pair<string, string>, bool>> problems;
     
     inFile >> no_problems;
 
@@ -21,7 +21,8 @@ int main()
         inFile >> name;
         inFile >> speciality;
         //cout << name << ' ' << speciality << '\n';
-		problems.push_back(make_pair(name, speciality));
+        problems.push_back(make_pair(make_pair(name, speciality), false));
+        //problem.first.first = boala; doctor.first.second = speciality; doctor.second = tratat/netratat;
     }
 
     inFile >> no_doctors;
@@ -31,29 +32,22 @@ int main()
         inFile >> name;
         inFile >> speciality;
         //cout << name << ' ' << speciality << '\n';
-		doctors.push_back(make_pair(name, speciality));
+        doctors.push_back(make_pair(name, speciality));
+	
     }
 
-	
+    for (auto doctor : doctors) {
+        auto it = find_if(problems.begin(), problems.end(), [doctor](pair<pair<string, string>, bool> problem) {
+            return doctor.second == problem.first.second && problem.second == false;
+            });
+        if (it != problems.end()) {
+            it->second = true;
+            cout << doctor.first << ' ' << it->first.first << '\n';
+        }
+    }
 
-	for (auto problem : problems)
-	{
-        bool ok = false;
-		for (auto doctor : doctors)
-		{
-			if (problem.second == doctor.second)
-			{
-                cout << problem.first << ' ' << "Acceptat" << '\n';
-                ok = true;
-				break;
 
-			}
-		}
-		if (!ok)
-		{
-			cout << problem.first << ' ' << "Respins" << '\n';
-		}
-	}
+
 
     return 0;
 }
