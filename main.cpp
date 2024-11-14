@@ -5,77 +5,45 @@
 
 using namespace std;
 
-struct doctor {
-	string name;
-	string speciality;
-    int hours_left = 8;
-	vector<string> problems_treated;
-};
-
-struct problem {
-    string problem;
-    string speciality;
-    int hour_needed;
-    bool treated = false;
-};
-
 int main()
 {
-    ifstream inFile("input4_bonus.txt");
+    ifstream inFile("input.txt");
 
     int no_problems, no_doctors;
-	vector<doctor> doctors;
-	vector<problem> problems;
-    
+    string name, speciality;
+    vector<pair<string, string>> doctors;
+    vector<pair<pair<string, string>, bool>> problems;
+
     inFile >> no_problems;
 
     for (int i = 0; i < no_problems; i++)
     {
-		string problem, speciality;
-        int hour;
-        inFile >> problem;
+        inFile >> name;
         inFile >> speciality;
-		inFile >> hour;
-
-        struct problem temp;
-		temp.problem = problem;
-		temp.speciality = speciality;
-		temp.hour_needed = hour;
-		problems.push_back(temp);
+        //cout << name << ' ' << speciality << '\n';
+        problems.push_back(make_pair(make_pair(name, speciality), false));
+        //problem.first.first = boala; doctor.first.second = speciality; doctor.second = tratat/netratat;
     }
 
     inFile >> no_doctors;
 
     for (int i = 0; i < no_doctors; i++)
     {
-		string name, speciality;
-
         inFile >> name;
         inFile >> speciality;
-        struct doctor temp;
-		temp.name = name;
-		temp.speciality = speciality;
-		doctors.push_back(temp);
-	
-    }
-    
-    for (auto &problem : problems) {
-        auto it = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor &doctor) {
-			return problem.speciality == doctor.speciality && problem.hour_needed <= doctor.hours_left && !problem.treated;
-            });
-        if (it != doctors.end()) {
-			problem.treated = true;
-			it->hours_left -= problem.hour_needed;
-			it->problems_treated.push_back(problem.problem);
-        }
+        //cout << name << ' ' << speciality << '\n';
+        doctors.push_back(make_pair(name, speciality));
+
     }
 
     for (auto doctor : doctors) {
-		cout << doctor.name << " " << doctor.problems_treated.size() << " ";
-        for (auto problem : doctor.problems_treated) {
-			cout << problem << " ";
+        auto it = find_if(problems.begin(), problems.end(), [doctor](pair<pair<string, string>, bool> problem) {
+            return doctor.second == problem.first.second && problem.second == false;
+            });
+        if (it != problems.end()) {
+            it->second = true;
+            cout << doctor.first << ' ' << it->first.first << '\n';
         }
-        cout << endl;
     }
 
 
