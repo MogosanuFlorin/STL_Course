@@ -2,47 +2,93 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 
 using namespace std;
+
+struct doctor {
+    string name;
+    string speciality;
+    int hours_left = 8;
+    vector<string> problems_treated;
+};
+
+struct problem {
+    string problem;
+    string speciality;
+    int hour_needed;
+	int priority;
+    bool treated = false;
+
+	bool operator<(const struct problem& n) const
+	{
+		return priority < n.priority;
+	}
+};
 
 int main()
 {
     ifstream inFile("input.txt");
 
     int no_problems, no_doctors;
-    string name, speciality;
-    vector<pair<string, string>> doctors;
-    vector<pair<pair<string, string>, bool>> problems;
+    vector<doctor> doctors;
+	priority_queue<problem> problems;
 
     inFile >> no_problems;
 
     for (int i = 0; i < no_problems; i++)
     {
-        inFile >> name;
+        string problem, speciality;
+        int hour, priority;
+        inFile >> problem;
         inFile >> speciality;
-        //cout << name << ' ' << speciality << '\n';
-        problems.push_back(make_pair(make_pair(name, speciality), false));
-        //problem.first.first = boala; doctor.first.second = speciality; doctor.second = tratat/netratat;
+        inFile >> hour;
+        inFile >> priority;
+
+        struct problem temp;
+        temp.problem = problem;
+        temp.speciality = speciality;
+        temp.hour_needed = hour;
+		temp.priority = priority;
+        problems.push(temp);
     }
 
     inFile >> no_doctors;
 
     for (int i = 0; i < no_doctors; i++)
     {
+        string name, speciality;
+
         inFile >> name;
         inFile >> speciality;
-        //cout << name << ' ' << speciality << '\n';
-        doctors.push_back(make_pair(name, speciality));
+        struct doctor temp;
+        temp.name = name;
+        temp.speciality = speciality;
+        doctors.push_back(temp);
 
     }
 
-    for (auto doctor : doctors) {
-        auto it = find_if(problems.begin(), problems.end(), [doctor](pair<pair<string, string>, bool> problem) {
-            return doctor.second == problem.first.second && problem.second == false;
+    while (!problems.empty()) {
+		struct problem problem = problems.top();
+        auto it = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor& doctor) {
+            return problem.speciality == doctor.speciality && problem.hour_needed <= doctor.hours_left && !problem.treated;
             });
-        if (it != problems.end()) {
-            it->second = true;
-            cout << doctor.first << ' ' << it->first.first << '\n';
+        if (it != doctors.end()) {
+            problem.treated = true;
+            it->hours_left -= problem.hour_needed;
+            it->problems_treated.push_back(problem.problem);
+			
+        }
+        problems.pop();
+    }
+
+    for (auto doctor : doctors) {
+        if (doctor.problems_treated.size() > 0) {
+            cout << doctor.name << " " << doctor.problems_treated.size() << " ";
+            for (auto problem : doctor.problems_treated) {
+                cout << problem << " ";
+            }
+            cout << endl;
         }
     }
 
