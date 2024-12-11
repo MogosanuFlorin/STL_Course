@@ -12,8 +12,9 @@ struct doctor {
 	int nr_specialities;
 	unordered_set<string> specialities;
     int hours_left = 8;
-    vector<string> problems_treated;
-	unordered_set<int> hours_unavailable;
+    int hour_unavailable=8;
+    vector<pair<int, string>> problems_treated;
+	
 };
 
 struct problem {
@@ -21,17 +22,21 @@ struct problem {
     string speciality;
     int hour_needed;
 	int priority;
+    int hour_arrived;
     bool treated = false;
 
 	bool operator<(const struct problem& n) const
 	{
-		return priority < n.priority;
+		if (this->hour_arrived != n.hour_arrived)
+			return this->hour_arrived > n.hour_arrived;
+		else
+			return this->priority < n.priority;
 	}
 };
 
 int main()
 {
-    ifstream inFile("input.txt");
+    ifstream inFile("input2.txt");
 
     int no_problems, no_doctors;
     vector<doctor> doctors;
@@ -42,15 +47,17 @@ int main()
     for (int i = 0; i < no_problems; i++)
     {
         string problem, speciality;
-        int hour, priority;
+        int hour, priority, hour_arrived;
         inFile >> problem;
         inFile >> speciality;
+		inFile >> hour_arrived;
         inFile >> hour;
         inFile >> priority;
 
         struct problem temp;
         temp.problem = problem;
         temp.speciality = speciality;
+		temp.hour_arrived = hour_arrived;
         temp.hour_needed = hour;
 		temp.priority = priority;
         problems.push(temp);
@@ -80,12 +87,13 @@ int main()
     while (!problems.empty()) {
 		struct problem problem = problems.top();
         auto it = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor& doctor) {
-            return doctor.specialities.contains(problem.speciality) && problem.hour_needed <= doctor.hours_left && !problem.treated;
+            return doctor.specialities.contains(problem.speciality) && problem.hour_needed <= doctor.hours_left && problem.hour_arrived > doctor.hour_unavailable && !problem.treated;
             });
         if (it != doctors.end()) {
             problem.treated = true;
             it->hours_left -= problem.hour_needed;
-            it->problems_treated.push_back(problem.problem);
+            it->problems_treated.push_back({problem.hour_arrived , problem.problem });
+            it->hour_unavailable = (problem.hour_arrived + problem.hour_needed - 1);
 			
         }
         problems.pop();
@@ -95,7 +103,7 @@ int main()
         if (doctor.problems_treated.size() > 0) {
             cout << doctor.name << " " << doctor.problems_treated.size() << " ";
             for (auto problem : doctor.problems_treated) {
-                cout << problem << " ";
+                cout << problem.second << " " << problem.first << " ";
             }
             cout << endl;
         }
