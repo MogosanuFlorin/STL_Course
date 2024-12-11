@@ -3,14 +3,17 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <unordered_set>
 
 using namespace std;
 
 struct doctor {
     string name;
-    string speciality;
+	int nr_specialities;
+	unordered_set<string> specialities;
     int hours_left = 8;
     vector<string> problems_treated;
+	unordered_set<int> hours_unavailable;
 };
 
 struct problem {
@@ -58,12 +61,18 @@ int main()
     for (int i = 0; i < no_doctors; i++)
     {
         string name, speciality;
+		int nr_specialities;
 
         inFile >> name;
-        inFile >> speciality;
+		inFile >> nr_specialities;
         struct doctor temp;
         temp.name = name;
-        temp.speciality = speciality;
+		temp.nr_specialities = nr_specialities;
+        for (int j = 0; j < nr_specialities; j++) {
+            inFile >> speciality;
+            temp.specialities.insert(speciality);
+        }
+        
         doctors.push_back(temp);
 
     }
@@ -71,7 +80,7 @@ int main()
     while (!problems.empty()) {
 		struct problem problem = problems.top();
         auto it = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor& doctor) {
-            return problem.speciality == doctor.speciality && problem.hour_needed <= doctor.hours_left && !problem.treated;
+            return doctor.specialities.contains(problem.speciality) && problem.hour_needed <= doctor.hours_left && !problem.treated;
             });
         if (it != doctors.end()) {
             problem.treated = true;
