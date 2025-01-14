@@ -4,7 +4,6 @@
 #include <vector>
 #include <queue>
 #include <unordered_set>
-
 using namespace std;
 
 struct doctor {
@@ -19,7 +18,7 @@ struct doctor {
 
 struct problem {
     string problem;
-    string speciality;
+    string specialty;
     int hour_needed;
 	int priority;
     int hour_arrived;
@@ -34,32 +33,26 @@ struct problem {
 	}
 };
 
-int main()
-{
-    ifstream inFile("input2.txt");
-
+void readFromFile(vector<doctor> &doctors, priority_queue<problem> &problems){
     int no_problems, no_doctors;
-    vector<doctor> doctors;
-	priority_queue<problem> problems;
-
+    ifstream inFile("input2.txt");
     inFile >> no_problems;
-
     for (int i = 0; i < no_problems; i++)
     {
-        string problem, speciality;
+        string problem, specialty;
         int hour, priority, hour_arrived;
         inFile >> problem;
-        inFile >> speciality;
-		inFile >> hour_arrived;
+        inFile >> specialty;
+        inFile >> hour_arrived;
         inFile >> hour;
         inFile >> priority;
 
         struct problem temp;
         temp.problem = problem;
-        temp.speciality = speciality;
-		temp.hour_arrived = hour_arrived;
+        temp.specialty = specialty;
+        temp.hour_arrived = hour_arrived;
         temp.hour_needed = hour;
-		temp.priority = priority;
+        temp.priority = priority;
         problems.push(temp);
     }
 
@@ -67,38 +60,25 @@ int main()
 
     for (int i = 0; i < no_doctors; i++)
     {
-        string name, speciality;
-		int nr_specialities;
+        string name, specialty;
+        int nr_specialties;
 
         inFile >> name;
-		inFile >> nr_specialities;
+        inFile >> nr_specialties;
         struct doctor temp;
         temp.name = name;
-		temp.nr_specialities = nr_specialities;
-        for (int j = 0; j < nr_specialities; j++) {
-            inFile >> speciality;
-            temp.specialities.insert(speciality);
+        temp.nr_specialities = nr_specialties;
+        for (int j = 0; j < nr_specialties; j++) {
+            inFile >> specialty;
+            temp.specialities.insert(specialty);
         }
-        
+
         doctors.push_back(temp);
 
     }
 
-    while (!problems.empty()) {
-		struct problem problem = problems.top();
-        auto it = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor& doctor) {
-            return doctor.specialities.contains(problem.speciality) && problem.hour_needed <= doctor.hours_left && problem.hour_arrived > doctor.hour_unavailable && !problem.treated;
-            });
-        if (it != doctors.end()) {
-            problem.treated = true;
-            it->hours_left -= problem.hour_needed;
-            it->problems_treated.push_back({problem.hour_arrived , problem.problem });
-            it->hour_unavailable = (problem.hour_arrived + problem.hour_needed - 1);
-			
-        }
-        problems.pop();
-    }
-
+}
+void printDoctors(vector<doctor> doctors) {
     for (auto doctor : doctors) {
         if (doctor.problems_treated.size() > 0) {
             cout << doctor.name << " " << doctor.problems_treated.size() << " ";
@@ -108,9 +88,35 @@ int main()
             cout << endl;
         }
     }
+}
+void treatProblem(vector<doctor>& doctors, struct problem problem) {
+    auto currentDoctor = find_if(doctors.begin(), doctors.end(), [&problem](struct doctor& doctor) {
+        return doctor.specialities.contains(problem.specialty) && problem.hour_needed <= doctor.hours_left && problem.hour_arrived > doctor.hour_unavailable && !problem.treated;
+        });
+    if (currentDoctor != doctors.end()) {
+        problem.treated = true;
+        currentDoctor->hours_left -= problem.hour_needed;
+        currentDoctor->problems_treated.push_back({ problem.hour_arrived , problem.problem });
+        currentDoctor->hour_unavailable = (problem.hour_arrived + problem.hour_needed - 1);
+    }
+}
+void treatAllProblems(vector<doctor>&doctors, priority_queue<problem>& problems) {
+    while (!problems.empty())
+    {
+        struct problem problem = problems.top();
+		treatProblem(doctors, problem);
+        problems.pop();
+    }
+}
 
 
 
-
+int main()
+{
+    vector<doctor> doctors;
+	priority_queue<problem> problems;
+	readFromFile(doctors, problems);
+	treatAllProblems(doctors, problems);
+	printDoctors(doctors);
     return 0;
 }
